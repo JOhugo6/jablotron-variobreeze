@@ -1,0 +1,44 @@
+{
+  "serial": {
+    "port": "/dev/serial0",
+    "baudrate": 19200,
+    "bytesize": 8,
+    "parity": "N",
+    "stopbits": 1,
+    "serial_timeout_seconds": 0.001,
+    "frame_gap_ms": 3.0
+  },
+  "http": {
+    "enabled": true,
+    "listen_host": "127.0.0.1",
+    "listen_port": 8765
+  },
+  "mqtt": {
+    "enabled": false,
+    "host": "127.0.0.1",
+    "port": 1883,
+    "username": null,
+    "password": null,
+    "client_id": "futura-zero",
+    "topic_prefix": "futura",
+    "retain": true,
+    "qos": 1,
+    "publish_on_change_only": true
+  },
+  "storage": {
+    "state_path": "state/dampers_state.json",
+    "snapshot_interval_seconds": 60,
+    "restore_state_on_start": true,
+    "write_state_on_shutdown": true
+  },
+  "debug": {
+    "raw_log_enabled": false,
+    "raw_log_path": "debug/raw.jsonl",
+    "raw_log_rotate_bytes": 5242880,
+    "raw_log_keep_files": 5,
+    "raw_log_compress_rotated": true
+  },
+  "damper_map": {
+    "path": "damper-map.json"
+  }
+}

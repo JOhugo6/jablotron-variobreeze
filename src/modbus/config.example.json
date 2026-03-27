@@ -1,0 +1,27 @@
+{
+  "modbus": {
+    "host": "192.168.12.11",
+    "port": 502,
+    "device_id": 1,
+    "timeout_seconds": 3.0
+  },
+  "service": {
+    "access_code": null,
+    "access_code_register": 900
+  },
+  "registers": {
+    "connected_supply_start": 70,
+    "connected_exhaust_start": 72,
+    "connected_word_order": "low_high",
+    "position_source": "input",
+    "position_scale_divisor": 1.0,
+    "supply_position_registers": {},
+    "exhaust_position_registers": {}
+  },
+  "poll": {
+    "interval_seconds": 5.0
+  },
+  "output": {
+    "format": "text"
+  }
+}

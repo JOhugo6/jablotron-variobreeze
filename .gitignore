@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.pyo
+
+.venv/
+venv/
+
+logs/
+debug/
+state/
+
+src/modbus/config.json
+src/sniffer/pi-zero-config.json
+src/sniffer/damper-map.json

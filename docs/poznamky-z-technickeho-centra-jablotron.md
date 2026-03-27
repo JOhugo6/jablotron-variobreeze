@@ -1,3 +1,5 @@
+**Česky** | [English](poznamky-z-technickeho-centra-jablotron.en.md)
+
 # Poznámky z technického centra Jablotronu
 
 ## Zdroj

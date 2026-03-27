@@ -1,3 +1,5 @@
+**Česky** | [English](README.en.md)
+
 # RS485 sniffer
 
 Tato složka je určená pro pasivní odposlech interní komunikace Futury po `RS485`.

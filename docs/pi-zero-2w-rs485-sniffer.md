@@ -1,3 +1,5 @@
+**Česky** | [English](pi-zero-2w-rs485-sniffer.en.md)
+
 # Raspberry Pi Zero 2 W RS-485 sniffer plán
 
 ## Kontext

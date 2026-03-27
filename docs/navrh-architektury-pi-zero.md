@@ -1,3 +1,5 @@
+**Česky** | [English](navrh-architektury-pi-zero.en.md)
+
 # Návrh architektury pro Pi Zero RS485 sniffer
 
 ## Účel dokumentu

@@ -1,3 +1,5 @@
+**Česky** | [English](README.en.md)
+
 # Futura VarioBreeze
 
 ## Co to je

@@ -1,3 +1,5 @@
+**Česky** | [English](mapa-klapek.en.md)
+
 # Mapa klapek
 
 Tenhle soubor je pripraveny pro rucni doplneni vsech skutecne osazenych klapek v systemu.

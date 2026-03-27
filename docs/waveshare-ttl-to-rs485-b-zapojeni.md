@@ -1,3 +1,5 @@
+**Česky** | [English](waveshare-ttl-to-rs485-b-zapojeni.en.md)
+
 # Waveshare TTL TO RS485 (B) zapojení
 
 ## Vybraný modul

@@ -1,3 +1,5 @@
+**Česky** | [English](nakupni-seznam.en.md)
+
 # Nákupní seznam
 
 ## Vybraný modul

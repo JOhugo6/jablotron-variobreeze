@@ -1,3 +1,5 @@
+**Česky** | [English](max3491-rx-only-zapojeni.en.md)
+
 # MAX3491 RX-only zapojení
 
 Poznámka:

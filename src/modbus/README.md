@@ -1,3 +1,5 @@
+**Česky** | [English](README.en.md)
+
 # Modbus TCP
 
 Tato složka je vyhrazená jen pro přímou práci s `Modbus TCP`.

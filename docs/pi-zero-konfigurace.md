@@ -1,3 +1,5 @@
+**Česky** | [English](pi-zero-konfigurace.en.md)
+
 # Pi Zero konfigurace
 
 Tento dokument popisuje soubory:

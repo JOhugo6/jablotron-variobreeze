@@ -1,3 +1,5 @@
+**Česky** | [English](cil-home-assistant.en.md)
+
 # Cíl integrace s Home Assistant
 
 ## Hlavní cíl

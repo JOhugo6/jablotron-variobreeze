@@ -1,6 +1,6 @@
 # Waveshare TTL TO RS485 (B) zapojení
 
-## Doporučená finální varianta
+## Vybraný modul
 
 Pro tenhle projekt je to aktuálně nejrozumnější kompromis mezi:
 
@@ -20,137 +20,139 @@ Důvod výběru:
 - `120R` terminace jde vypnout přepínačem
 - oficiální dokumentace ukazuje přesné rozhraní `VCC`, `GND`, `TXD`, `RXD`, `SGND`, `A+`, `B-`
 
-## Finální nákupní seznam
+Co koupit je v samostatném dokumentu:
+- [nakupni-seznam.md](nakupni-seznam.md)
 
-### Povinné položky
+## Co se na modulu použije
 
-1. `Raspberry Pi Zero 2 W s připájeným GPIO headerem`
-2. `Waveshare TTL TO RS485 (B)`
-3. `Raspberry Pi 64GB microSDXC Class 10 UHS-I U1 A1 s Raspberry Pi OS`
-4. `MEAN WELL HDR-30-5`
-5. `Vertikální držák na DIN lištu pro Raspberry Pi typ 2`
-6. `Datový kabel USB - micro USB, 0,15m`
-7. `Drátové propojky Female/Male 10 cm, 10 ks`
+Horní svorky modulu:
 
-### Montážní drobnosti
+- `VCC`
+- `GND`
+- `TXD`
+- `RXD`
 
-Tyhle polozky nejsou specificky vazane na jeden e-shop, ale pro montaz je pocitam jako soucast finalniho BOM:
+Spodní svorky modulu:
 
-1. `3x kratky vodic 0,5 az 0,75 mm2` pro `A+`, `B-` a pripadne `SGND`
-2. `2x kratky vodic 0,5 az 0,75 mm2` pro `DIN zdroj +V/-V -> ustřižený USB kabel`
-3. `dutinky / ferule` podle zvoleneho prurezu, pokud pouzijes lankove vodice
-4. `stahovaci pasky` nebo jine odlehceni tahu kabelu
+- `SGND`
+- `A+`
+- `B-`
 
-### Jediná rozumná alternativa zdroje
+Přepínač:
 
-Pokud by `HDR-30-5` nebyl dostupny, rozumna nahrada je:
+- `120R`
 
-1. `MEAN WELL MDR-20-5`
+## Důležitá logika signálů
 
-Pro tenhle projekt ho ale beru jako `alternativu`, ne jako vychozi volbu.
+Podle oficiálního testovacího schématu Waveshare:
 
-### Alternativa držáku: 3D tisk
+- `USB-TTL RXD` je připojené na `modul TXD`
+- `USB-TTL TXD` je připojené na `modul RXD`
 
-`DIN` drzak pro `Pi Zero 2` jde vytisknout na `3D` tiskarne.
+Z toho plyne:
 
-Prakticky to znamena:
+- `modul TXD` je výstup z modulu směrem do hosta
+- `modul RXD` je vstup do modulu od hosta
 
-- neni nutne kupovat hotovy `Vertikální držák na DIN lištu pro Raspberry Pi typ 2`
-- lze vytisknout ekvivalentni drzak pro `TS35` listu
+Pro pasivní odposlech tedy chceme:
 
-Doporuceni pro tisk:
+- `Pi RX <- modul TXD`
+- `Pi TX` nechat úplně odpojené
+- `modul RXD` nechat úplně odpojené
 
-- material `PETG`, `ASA` nebo `ABS`
-- ne `PLA`
-- alespon `4` perimetry
-- infill alespon `40 %`
+Tím modul nemá žádný datový vstup z Raspberry Pi.
 
-Kdy je 3D tisk rozumna volba:
+## Přesné zapojení na Raspberry Pi
 
-- `Pi` bude v `SELV` casti rozvadece
-- v rozvadeci neni vysoka teplota
-- nevadi ti vlastni mechanicke doladeni
+Použij tyto fyzické piny:
 
-Kdy je lepsi koupit hotovy drzak:
+- `Pi pin 1` = `3V3`
+- `Pi pin 6` = `GND`
+- `Pi pin 10` = `GPIO15 / RXD0`
+- `Pi pin 8` = `GPIO14 / TXD0`, ten se nepoužije
 
-- chces co nejmensi montazni riziko
-- nechces resit tuhost DIN klipu
-- chces hotove a predvidatelne mechanicke reseni
+### Přesná tabulka propojení Pi -> modul
 
-## Objednávka bez alternativ
+| Raspberry Pi | Modul Waveshare | Poznámka |
+|---|---|---|
+| `pin 1 (3V3)` | `VCC` | napájení TTL strany modulu na `3.3 V` |
+| `pin 6 (GND)` | `GND` | zem TTL strany modulu |
+| `pin 10 (RXD0)` | `TXD` | data z modulu do Pi |
+| nic | `RXD` | nezapojovat |
+| `pin 8 (TXD0)` | nic | nezapojovat |
 
-Aktualne doporucena objednavka je:
+## Přesné zapojení modul -> Futura
 
-1. `Raspberry Pi Zero 2 W s připájeným GPIO headerem`
-2. `Waveshare převodník TTL na RS485 (B)`
-3. `Raspberry Pi 64GB microSDXC Class 10 UHS-I U1 A1 s Raspberry Pi OS`
-4. `MEAN WELL HDR-30-5`
-5. `Vertikální držák na DIN lištu pro Raspberry Pi typ 2`
-6. `Datový kabel USB - micro USB, 0,15m`
-7. `Drátové propojky Female/Male 10 cm, 10 ks`
+Na spodní straně modulu:
 
-Proc zrovna tahle sestava:
+- `A+ -> A` na Futuře
+- `B- -> B` na Futuře
+- `SGND -> GND/COM` na Futuře pouze pokud je komunikační zem jasně označená
 
-- `Pi` uz ma pripajeny `GPIO header`, takze odpada dalsi pajeni
-- `Waveshare` modul je hotovy a izolovany
-- `64GB microSD` je aktualne skladem a ma uz `Raspberry Pi OS`
-- `MEAN WELL HDR-30-5` je kvalitnejsi `DIN 5V` zdroj pro rozvadece
-- `Pi` muze byt na DIN liste hned vedle prevodniku
-- `0,15 m micro-USB` kabel umozni kratke a ciste napajeni
-- `10 cm Female/Male` propojky staci pro kratke propojeni `Pi -> modul`
+Bezpečný postup:
 
-Aktualni stav dostupnosti k `23. březnu 2026`:
+1. začni jen s `A+` a `B-`
+2. pokud nebude komunikace stabilní nebo neuvidíš validní rámce, přidej `SGND -> GND/COM`
+3. pokud nebude sedět `CRC`, prohoď `A+` a `B-`
 
-- `Raspberry Pi Zero 2 W s připájeným GPIO headerem`: `RPishop skladem 5 a více kusů`
-- `Waveshare převodník TTL na RS485 (B)`: `skladem 5 a více kusů`
-- `Raspberry Pi 64GB microSDXC ...`: `RPishop skladem 5 a více kusů`
-- `MEAN WELL HDR-30-5`: `skladem` na `RS Online CZ`
-- `Vertikální držák na DIN lištu pro Raspberry Pi typ 2`: `skladem 5 a více kusů`
-- `Datový kabel USB - micro USB, 0,15m`: `skladem 5 a více kusů`
-- `Drátové propojky Female/Male 10 cm, 10 ks`: `skladem 5 a více kusů`
+Nikdy nepřipojuj:
 
-## Doporučený nákup po obchodech
+- `24V`
+- napájecí `0V`, pokud není jisté, že jde o komunikační `GND/COM`
+- žádný vodič z `Pi TX`
 
-### RPishop
+## Přesné nastavení modulu
 
-1. `Raspberry Pi Zero 2 W s připájeným GPIO headerem`
-2. `Waveshare převodník TTL na RS485 (B)`
-3. `Raspberry Pi 64GB microSDXC Class 10 UHS-I U1 A1 s Raspberry Pi OS`
-4. `Vertikální držák na DIN lištu pro Raspberry Pi typ 2`
-5. `Datový kabel USB - micro USB, 0,15m`
-6. `Drátové propojky Female/Male 10 cm, 10 ks`
+Před připojením k Futuře:
 
-### RS Online CZ
+1. přepínač `120R` nastav na `OFF`
 
-1. `MEAN WELL HDR-30-5`
+Důvod:
 
-Tohle je aktualne moje preferovana nakupni varianta.
+- sniffer se připojuje paralelně na už existující sběrnici
+- nesmí přidat další terminaci
 
-## Pokud bude Pi v rozvodné skříni
+## ASCII schéma
 
-Jestli bude `Raspberry Pi Zero 2` opravdu v rozvodne skrini vedle `Waveshare TTL TO RS485 (B)`, je lepsi:
+```text
+Raspberry Pi Zero 2 WH                     Waveshare TTL TO RS485 (B)                     Futura RS-485
+======================                     ==========================                     ==============
 
-- nepouzivat beznou `Zero` krabicku
-- misto ni vzit `DIN` drzak pro Raspberry Pi
-- dat `Pi` primo vedle `TTL/RS-485` modulu
+pin 1  (3V3)   --------------------------> VCC
+pin 6  (GND)   --------------------------> GND
+pin 10 (RXD0)  <-------------------------- TXD
+pin 8  (TXD0)   --- NEZAPOJOVAT ---
+                                           RXD --- NEZAPOJOVAT ---
 
-Tahle topologie je lepsi, protoze:
+                                           A+  -----------------------------------------> A
+                                           B-  -----------------------------------------> B
+                                           SGND -------- optional -----------------------> GND / COM
 
-- `TTL` vedeni bude velmi kratke
-- bude min ruseni
-- cele zapojeni bude prehlednejsi
+                                           120R switch = OFF
+```
 
-### Praktická výměna v košíku
+## Kontrola před zapnutím
 
-Pokud pujdes cestou `DIN` montaze, vymen:
+Zkontroluj:
 
-- `běžnou Zero krabičku`
+1. `Pi pin 8` není nikam připojený
+2. `modul RXD` není nikam připojený
+3. `120R` je `OFF`
+4. `VCC` modulu jde na `3V3`, ne na `5V`
+5. `A+` a `B-` nejdou na `24V`
+6. modul je připojený `paralelně`, ne do série
 
-za:
+Pokud body `1` a `2` neplatí, není to pasivní varianta.
 
-- `Vertikální držák na DIN lištu pro Raspberry Pi typ 2`
+## Doporučený postup montáže
 
-Bezna krabicka uz v tom pripade neni potreba.
+1. připrav Raspberry Pi s povoleným `UART`
+2. propoj jen `VCC`, `GND`, `TXD -> Pi RX`
+3. nechej `RXD` na modulu volný
+4. nastav `120R` na `OFF`
+5. připoj `A+` a `B-` na Futuru
+6. spusť monitor
+7. teprve pokud bude potřeba, doplň `SGND`
 
 ## Jak napájet Pi v rozvodné skříni
 
@@ -318,64 +320,6 @@ Praktické doporučení:
 - na straně modulu vodiče odizoluj a upni do šroubovacích svorek
 - pro `Futura -> modul` použij samostatné vodiče do spodních svorek `SGND / A+ / B-`
 
-## Co se na modulu použije
-
-Horní svorky modulu:
-
-- `VCC`
-- `GND`
-- `TXD`
-- `RXD`
-
-Spodní svorky modulu:
-
-- `SGND`
-- `A+`
-- `B-`
-
-Přepínač:
-
-- `120R`
-
-## Důležitá logika signálů
-
-Podle oficiálního testovacího schématu Waveshare:
-
-- `USB-TTL RXD` je připojené na `modul TXD`
-- `USB-TTL TXD` je připojené na `modul RXD`
-
-Z toho plyne:
-
-- `modul TXD` je výstup z modulu směrem do hosta
-- `modul RXD` je vstup do modulu od hosta
-
-Pro pasivní odposlech tedy chceme:
-
-- `Pi RX <- modul TXD`
-- `Pi TX` nechat úplně odpojené
-- `modul RXD` nechat úplně odpojené
-
-Tím modul nemá žádný datový vstup z Raspberry Pi.
-
-## Přesné zapojení na Raspberry Pi
-
-Použij tyto fyzické piny:
-
-- `Pi pin 1` = `3V3`
-- `Pi pin 6` = `GND`
-- `Pi pin 10` = `GPIO15 / RXD0`
-- `Pi pin 8` = `GPIO14 / TXD0`, ten se nepoužije
-
-### Přesná tabulka propojení Pi -> modul
-
-| Raspberry Pi | Modul Waveshare | Poznámka |
-|---|---|---|
-| `pin 1 (3V3)` | `VCC` | napájení TTL strany modulu na `3.3 V` |
-| `pin 6 (GND)` | `GND` | zem TTL strany modulu |
-| `pin 10 (RXD0)` | `TXD` | data z modulu do Pi |
-| nic | `RXD` | nezapojovat |
-| `pin 8 (TXD0)` | nic | nezapojovat |
-
 ## Varianta s UTP kabelem 3 m
 
 Ano, `UTP` kabel na vzdálenost `3 m` použít lze.
@@ -443,79 +387,6 @@ Pokud bude mezi `Pi` a modulem opravdu `3 m` kabelu:
 1. první test udělej na `9600 8N1`
 2. teprve potom zkus `19200 8N1`
 3. pokud bude provoz nestabilní, zkrať `TTL` vedení nebo použij stíněný kabel
-
-## Přesné zapojení modul -> Futura
-
-Na spodní straně modulu:
-
-- `A+ -> A` na Futuře
-- `B- -> B` na Futuře
-- `SGND -> GND/COM` na Futuře pouze pokud je komunikační zem jasně označená
-
-Bezpečný postup:
-
-1. začni jen s `A+` a `B-`
-2. pokud nebude komunikace stabilní nebo neuvidíš validní rámce, přidej `SGND -> GND/COM`
-3. pokud nebude sedět `CRC`, prohoď `A+` a `B-`
-
-Nikdy nepřipojuj:
-
-- `24V`
-- napájecí `0V`, pokud není jisté, že jde o komunikační `GND/COM`
-- žádný vodič z `Pi TX`
-
-## Přesné nastavení modulu
-
-Před připojením k Futuře:
-
-1. přepínač `120R` nastav na `OFF`
-
-Důvod:
-
-- sniffer se připojuje paralelně na už existující sběrnici
-- nesmí přidat další terminaci
-
-## ASCII schéma
-
-```text
-Raspberry Pi Zero 2 WH                     Waveshare TTL TO RS485 (B)                     Futura RS-485
-======================                     ==========================                     ==============
-
-pin 1  (3V3)   --------------------------> VCC
-pin 6  (GND)   --------------------------> GND
-pin 10 (RXD0)  <-------------------------- TXD
-pin 8  (TXD0)   --- NEZAPOJOVAT ---
-                                           RXD --- NEZAPOJOVAT ---
-
-                                           A+  -----------------------------------------> A
-                                           B-  -----------------------------------------> B
-                                           SGND -------- optional -----------------------> GND / COM
-
-                                           120R switch = OFF
-```
-
-## Kontrola před zapnutím
-
-Zkontroluj:
-
-1. `Pi pin 8` není nikam připojený
-2. `modul RXD` není nikam připojený
-3. `120R` je `OFF`
-4. `VCC` modulu jde na `3V3`, ne na `5V`
-5. `A+` a `B-` nejdou na `24V`
-6. modul je připojený `paralelně`, ne do série
-
-Pokud body `1` a `2` neplatí, není to pasivní varianta.
-
-## Doporučený postup montáže
-
-1. připrav Raspberry Pi s povoleným `UART`
-2. propoj jen `VCC`, `GND`, `TXD -> Pi RX`
-3. nechej `RXD` na modulu volný
-4. nastav `120R` na `OFF`
-5. připoj `A+` a `B-` na Futuru
-6. spusť monitor
-7. teprve pokud bude potřeba, doplň `SGND`
 
 ## Software po zapojení
 
@@ -597,5 +468,3 @@ Ale ciste pro `Home Assistant` to neni nejkratsi cesta.
 ## Reference
 
 1. Waveshare Wiki `TTL TO RS485 (B)`: https://www.waveshare.com/wiki/TTL_TO_RS485_(B)
-2. RPishop produktová stránka `Waveshare převodník TTL na RS485 (B)`: https://rpishop.cz/datove-redukce/6122-waveshare-prevodnik-ttl-na-rs485-b.html
-3. RS Online CZ `MEAN WELL HDR-30-5`: https://cz.rs-online.com/web/p/napajeci-zdroje-pro-montaz-na-listu-din/1457864

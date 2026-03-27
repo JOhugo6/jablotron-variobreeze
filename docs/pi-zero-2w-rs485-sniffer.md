@@ -27,9 +27,9 @@ Přesné finální zapojení je v:
 
 - [waveshare-ttl-to-rs485-b-zapojeni.md](waveshare-ttl-to-rs485-b-zapojeni.md)
 
-Přesná finální objednávka bez alternativ je také v:
+Přesná finální objednávka bez alternativ je v:
 
-- [waveshare-ttl-to-rs485-b-zapojeni.md](waveshare-ttl-to-rs485-b-zapojeni.md)
+- [nakupni-seznam.md](nakupni-seznam.md)
 
 ## Doporučený HW k objednání
 

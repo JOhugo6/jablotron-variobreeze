@@ -560,7 +560,7 @@ V HA se vytvoří:
 - jedno nadřazené zařízení `Futura VarioBreeze Bridge`
 - samostatné zařízení pro každou klapku (např. `Obyvak privod 1`, `Knihovna privod 1`, ...)
 
-Každá klapka je vlastní zařízení, takže ji můžete v HA přiřadit do správné místnosti (`Settings` -> `Devices & Services` -> `MQTT` -> klikněte na zařízení klapky -> `Area`). Bridge při discovery navrhuje místnost z `damper-map.json` automaticky (`suggested_area`), ale přiřazení si můžete změnit.
+Každá klapka je vlastní zařízení, takže ji můžete v HA přiřadit do správné místnosti: `Settings` -> `Devices & Services` -> `MQTT` -> klikněte na zařízení klapky -> `Area`. Přiřazení místností je ruční, bridge je nevytváří automaticky.
 
 Pod každým zařízením klapky jsou senzory:
 

@@ -336,7 +336,6 @@ class MqttPublisher:
                 "manufacturer": "Jablotron",
                 "model": "VarioBreeze",
                 "via_device": "futura_bridge",
-                "suggested_area": damper.get("room"),
             }
 
             sensors = [

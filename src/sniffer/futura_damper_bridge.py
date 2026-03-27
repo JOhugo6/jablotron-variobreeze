@@ -212,9 +212,11 @@ class MqttPublisher:
         self.password = config.get("password")
         self.client_id = str(config.get("client_id", "futura-zero"))
         self.topic_prefix = str(config.get("topic_prefix", "futura")).rstrip("/")
+        self.discovery_prefix = str(config.get("discovery_prefix", "homeassistant")).rstrip("/")
         self.retain = bool(config.get("retain", True))
         self.qos = int(config.get("qos", 1))
         self.publish_on_change_only = bool(config.get("publish_on_change_only", True))
+        self.availability_topic = f"{self.topic_prefix}/bridge/status"
         self._state_getter = state_getter
         self._lock = threading.Lock()
         self._connected = False
@@ -238,6 +240,7 @@ class MqttPublisher:
         )
         if self.username:
             client.username_pw_set(self.username, self.password)
+        client.will_set(self.availability_topic, "offline", qos=self.qos, retain=True)
         client.on_connect = self._on_connect
         client.on_disconnect = self._on_disconnect
         if hasattr(client, "on_connect_fail"):
@@ -282,6 +285,8 @@ class MqttPublisher:
         if connected:
             self._set_last_error(None)
             print(f"MQTT připojeno: {self.host}:{self.port} ({reason_code})", file=sys.stderr)
+            self._client.publish(self.availability_topic, "online", qos=self.qos, retain=True)
+            self._publish_ha_discovery()
             self.publish_all()
             return
         message = f"Broker odmítl připojení MQTT: {reason_code}"
@@ -310,6 +315,86 @@ class MqttPublisher:
             return
         self._client.loop_start()
 
+    def _publish_ha_discovery(self) -> None:
+        if not self.enabled or self._client is None or not self.connected:
+            return
+
+        dampers = [d for d in self._state_getter() if d.get("enabled", True)]
+        device_info = {
+            "identifiers": ["futura_variobreeze"],
+            "name": "Futura VarioBreeze",
+            "manufacturer": "Jablotron",
+            "model": "VarioBreeze",
+        }
+        availability = {
+            "availability_topic": self.availability_topic,
+            "payload_available": "online",
+            "payload_not_available": "offline",
+        }
+
+        for damper in dampers:
+            slave_id = damper["slave_id"]
+            label = damper.get("label", f"Klapka {slave_id}")
+            state_topic = f"{self.topic_prefix}/damper/{slave_id}/state"
+
+            sensors = [
+                {
+                    "key": "target_position",
+                    "name": f"{label} poloha",
+                    "unit": "%",
+                    "icon": "mdi:valve",
+                    "device_class": None,
+                },
+                {
+                    "key": "status_code",
+                    "name": f"{label} status",
+                    "unit": None,
+                    "icon": "mdi:information-outline",
+                    "device_class": None,
+                },
+                {
+                    "key": "last_target_ts",
+                    "name": f"{label} poslední změna polohy",
+                    "unit": None,
+                    "icon": "mdi:clock-outline",
+                    "device_class": "timestamp",
+                },
+                {
+                    "key": "last_seen_ts",
+                    "name": f"{label} poslední aktivita",
+                    "unit": None,
+                    "icon": "mdi:eye-outline",
+                    "device_class": "timestamp",
+                },
+            ]
+
+            for sensor in sensors:
+                unique_id = f"futura_damper_{slave_id}_{sensor['key']}"
+                config_topic = f"{self.discovery_prefix}/sensor/{unique_id}/config"
+                config_payload: Dict[str, Any] = {
+                    "name": sensor["name"],
+                    "unique_id": unique_id,
+                    "state_topic": state_topic,
+                    "value_template": f"{{{{ value_json.{sensor['key']} }}}}",
+                    "device": device_info,
+                    **availability,
+                }
+                if sensor["unit"]:
+                    config_payload["unit_of_measurement"] = sensor["unit"]
+                if sensor["icon"]:
+                    config_payload["icon"] = sensor["icon"]
+                if sensor["device_class"]:
+                    config_payload["device_class"] = sensor["device_class"]
+
+                self._client.publish(
+                    config_topic,
+                    json.dumps(config_payload, ensure_ascii=False),
+                    qos=self.qos,
+                    retain=True,
+                )
+
+        print(f"MQTT HA Discovery: publikováno {len(dampers)} klapek", file=sys.stderr)
+
     def publish_damper(self, damper: Dict[str, Any], force: bool = False) -> None:
         if not self.enabled or self._client is None or not self.connected:
             return
@@ -330,6 +415,12 @@ class MqttPublisher:
 
     def close(self) -> None:
         if self._client is not None:
+            if self.connected:
+                info = self._client.publish(self.availability_topic, "offline", qos=self.qos, retain=True)
+                try:
+                    info.wait_for_publish(timeout=2.0)
+                except Exception:
+                    pass
             self._client.loop_stop()
             self._client.disconnect()
             self._client = None
@@ -404,6 +495,9 @@ class DamperBridgeState:
                 self.dampers[slave_id]["status_code"] = status if isinstance(status, int) else None
                 self.dampers[slave_id]["last_target_ts"] = item.get("last_target_ts")
                 self.dampers[slave_id]["last_status_ts"] = item.get("last_status_ts")
+                last_seen = item.get("last_seen_ts")
+                if isinstance(last_seen, str) and last_seen:
+                    self.dampers[slave_id]["last_seen_ts"] = last_seen
 
     def snapshot_payload(self) -> Dict[str, Any]:
         with self.lock:
@@ -458,11 +552,17 @@ class DamperBridgeState:
 
     def public_dampers(self) -> List[Dict[str, Any]]:
         with self.lock:
-            return [self._public_damper_locked(slave_id) for slave_id in sorted(self.dampers)]
+            return [
+                self._public_damper_locked(slave_id)
+                for slave_id in sorted(self.dampers)
+                if self.dampers[slave_id].get("enabled", True)
+            ]
 
     def public_damper(self, slave_id: int) -> Optional[Dict[str, Any]]:
         with self.lock:
             if slave_id not in self.dampers:
+                return None
+            if not self.dampers[slave_id].get("enabled", True):
                 return None
             return self._public_damper_locked(slave_id)
 

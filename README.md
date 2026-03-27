@@ -505,11 +505,24 @@ V logu byste měli vidět zprávu o úspěšném připojení k MQTT brokeru. Pok
 
 #### Ověření v Home Assistant
 
-V `Home Assistant` otevřete `Settings` -> `Devices & Services` -> `MQTT` -> `Configure`.
+Bridge při připojení k MQTT automaticky publikuje discovery zprávy pro Home Assistant. To znamená, že entity se v HA vytvoří samy, bez ruční konfigurace v `configuration.yaml`.
 
-Klikněte na `Listen to a topic`, zadejte `futura/#` a klikněte `Start listening`.
+Po restartu bridge otevřete v HA `Settings` -> `Devices & Services` -> `MQTT`.
 
-Pokud bridge posílá data, uvidíte zprávy s aktuálním stavem klapek.
+Mělo by se tam objevit zařízení `Futura VarioBreeze` a pod ním senzory pro každou klapku:
+
+- `<label> poloha` - cílová poloha klapky v procentech (`target_position`)
+- `<label> status` - stavový kód klapky (`status_code`)
+- `<label> poslední změna polohy` - kdy Futura naposledy přepočítala polohu (`last_target_ts`)
+- `<label> poslední aktivita` - kdy byla klapka naposledy vidět na sběrnici (`last_seen_ts`)
+
+Pokud entity nevidíte:
+
+- ověřte, že MQTT integrace v HA je funkční: `Settings` -> `Devices & Services` -> `MQTT` -> `Configure` -> `Listen to a topic` -> zadejte `homeassistant/#` -> `Start listening`
+- v logu bridge byste měli vidět řádek `MQTT HA Discovery: publikováno X klapek`
+- zkuste restartovat bridge: `sudo systemctl restart futura-damper-bridge`
+
+Pro ruční kontrolu surových MQTT zpráv zadejte v `Listen to a topic` hodnotu `futura/#`.
 
 #### Co bridge posílá do MQTT
 

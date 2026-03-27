@@ -21,6 +21,7 @@
     "password": null,
     "client_id": "futura-zero",
     "topic_prefix": "futura",
+    "discovery_prefix": "homeassistant",
     "retain": true,
     "qos": 1,
     "publish_on_change_only": true

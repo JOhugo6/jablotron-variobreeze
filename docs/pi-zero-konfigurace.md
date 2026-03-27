@@ -117,6 +117,7 @@ Výchozí obsah vypadá takto:
     "password": null,
     "client_id": "futura-zero",
     "topic_prefix": "futura",
+    "discovery_prefix": "homeassistant",
     "retain": true,
     "qos": 1,
     "publish_on_change_only": true
@@ -530,6 +531,24 @@ Příklad:
 
 - klapka `66` se pak bude publikovat pod topic podobný `futura/damper/66/state`
 
+#### `discovery_prefix`
+
+Typická hodnota:
+
+```json
+"homeassistant"
+```
+
+Co to dělá:
+
+- prefix pro MQTT Discovery topiky, přes které bridge automaticky vytváří entity v Home Assistant
+- bridge publikuje discovery config na topiky typu `homeassistant/sensor/futura_damper_66_target_position/config`
+
+Kdy měnit:
+
+- jen pokud máte v Home Assistant změněný discovery prefix v nastavení MQTT integrace
+- výchozí hodnota `homeassistant` odpovídá výchozímu nastavení Home Assistant
+
 #### `retain`
 
 Typická hodnota:
@@ -800,10 +819,12 @@ Povolené hodnoty:
 
 ### `enabled`
 
-- `true` = klapka je aktivní a bridge ji sleduje
-- `false` = záznam je v mapě, ale bridge ho ignoruje
+- `true` = klapka je aktivní, bridge ji sleduje, publikuje do MQTT a vytváří pro ni entity v Home Assistant
+- `false` = záznam je v mapě, ale bridge ho nepublikuje do MQTT a nevytváří pro něj discovery entity v Home Assistant
 
 To je užitečné, když si chcete klapku v mapě nechat poznamenanou, ale dočasně ji nepublikovat.
+
+Důležité: pokud klapku přepnete z `true` na `false`, bridge přestane posílat nová data a nevytvoří pro ni discovery při dalším připojení. Ale entity, které už v Home Assistant existují, se automaticky nesmažou. Pokud je chcete odstranit, musíte je smazat ručně v HA v `Settings` -> `Devices & Services` -> `MQTT` -> zařízení `Futura VarioBreeze`.
 
 ### `notes`
 

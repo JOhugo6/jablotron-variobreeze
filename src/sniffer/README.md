@@ -159,6 +159,7 @@ Pro běžný provoz:
 - nechte `raw_log_enabled` vypnuté
 - stav držte v `RAM` a snapshotujte jen periodicky
 - `MQTT` zapínejte až když máte broker a topicy připravené
+- klapky s `enabled: false` v `damper-map.json` se nepublikují do MQTT a nevytváří se pro ně entity v HA. Pokud klapku vypnete dodatečně, existující entity v HA je potřeba smazat ručně
 
 Pro ladění a reverzní analýzu:
 

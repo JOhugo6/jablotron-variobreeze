@@ -218,6 +218,7 @@ class MqttPublisher:
         self._state_getter = state_getter
         self._lock = threading.Lock()
         self._connected = False
+        self._last_error: Optional[str] = None
         self._client: Optional[Any] = None
         self._last_published_payload_by_topic: Dict[str, str] = {}
 
@@ -239,6 +240,8 @@ class MqttPublisher:
             client.username_pw_set(self.username, self.password)
         client.on_connect = self._on_connect
         client.on_disconnect = self._on_disconnect
+        if hasattr(client, "on_connect_fail"):
+            client.on_connect_fail = self._on_connect_fail
         self._client = client
 
     @property
@@ -246,23 +249,65 @@ class MqttPublisher:
         with self._lock:
             return self._connected
 
+    @property
+    def last_error(self) -> Optional[str]:
+        with self._lock:
+            return self._last_error
+
     def _set_connected(self, value: bool) -> None:
         with self._lock:
             self._connected = value
 
+    def _set_last_error(self, value: Optional[str]) -> None:
+        with self._lock:
+            self._last_error = value
+
+    @staticmethod
+    def _reason_code_ok(reason_code: Any) -> bool:
+        if reason_code is None:
+            return False
+        if hasattr(reason_code, "is_failure"):
+            try:
+                return not bool(reason_code.is_failure)
+            except Exception:
+                pass
+        try:
+            return int(reason_code) == 0
+        except Exception:
+            return str(reason_code).strip().lower() in {"0", "success"}
+
     def _on_connect(self, client: Any, _userdata: Any, _flags: Any, reason_code: Any, _properties: Any = None) -> None:
-        connected = int(reason_code) == 0
+        connected = self._reason_code_ok(reason_code)
         self._set_connected(connected)
         if connected:
+            self._set_last_error(None)
+            print(f"MQTT připojeno: {self.host}:{self.port} ({reason_code})", file=sys.stderr)
             self.publish_all()
+            return
+        message = f"Broker odmítl připojení MQTT: {reason_code}"
+        self._set_last_error(message)
+        print(message, file=sys.stderr)
 
     def _on_disconnect(self, _client: Any, _userdata: Any, _flags: Any, _reason_code: Any, _properties: Any = None) -> None:
         self._set_connected(False)
+        if self.enabled:
+            self._set_last_error("MQTT bylo odpojeno.")
+
+    def _on_connect_fail(self, _client: Any, _userdata: Any) -> None:
+        self._set_connected(False)
+        self._set_last_error(f"Nepodařilo se navázat MQTT spojení na {self.host}:{self.port}.")
+        print(self.last_error, file=sys.stderr)
 
     def connect(self) -> None:
         if not self.enabled or self._client is None:
             return
-        self._client.connect_async(self.host, self.port, keepalive=30)
+        try:
+            self._client.connect_async(self.host, self.port, keepalive=30)
+        except Exception as exc:
+            self._set_connected(False)
+            self._set_last_error(f"MQTT connect selhal: {exc}")
+            print(self.last_error, file=sys.stderr)
+            return
         self._client.loop_start()
 
     def publish_damper(self, damper: Dict[str, Any], force: bool = False) -> None:
@@ -334,11 +379,13 @@ class DamperBridgeState:
         self._last_snapshot_monotonic = time.monotonic()
         self.mqtt_enabled = False
         self.mqtt_connected = False
+        self.mqtt_last_error: Optional[str] = None
 
-    def set_mqtt_status(self, enabled: bool, connected: bool) -> None:
+    def set_mqtt_status(self, enabled: bool, connected: bool, last_error: Optional[str] = None) -> None:
         with self.lock:
             self.mqtt_enabled = enabled
             self.mqtt_connected = connected
+            self.mqtt_last_error = last_error
 
     def restore_snapshot(self, payload: Dict[str, Any]) -> None:
         dampers = payload.get("dampers", [])
@@ -440,6 +487,7 @@ class DamperBridgeState:
                 "mqtt": {
                     "enabled": self.mqtt_enabled,
                     "connected": self.mqtt_connected,
+                    "last_error": self.mqtt_last_error,
                 },
                 "serial": dict(self.serial_config),
                 "state_path": str(self.state_path),
@@ -737,7 +785,7 @@ def sniff_serial(
                 raw_logger.write(record)
                 for damper in changed_dampers:
                     mqtt_publisher.publish_damper(damper)
-                state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected)
+                state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected, mqtt_publisher.last_error)
                 state.maybe_snapshot()
             last_byte_at = now_mono
             continue
@@ -748,7 +796,7 @@ def sniff_serial(
                 raw_logger.write(record)
                 for damper in changed_dampers:
                     mqtt_publisher.publish_damper(damper)
-                state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected)
+                state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected, mqtt_publisher.last_error)
                 state.maybe_snapshot()
 
             if (
@@ -763,11 +811,11 @@ def sniff_serial(
                 raw_logger.write(record)
                 for damper in changed_dampers:
                     mqtt_publisher.publish_damper(damper)
-                state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected)
+                state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected, mqtt_publisher.last_error)
                 state.maybe_snapshot()
                 frame_buffer.clear()
 
-        state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected)
+        state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected, mqtt_publisher.last_error)
         state.maybe_snapshot()
 
 
@@ -870,7 +918,7 @@ def main() -> int:
         http_thread.start()
 
     mqtt_publisher.connect()
-    state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected)
+    state.set_mqtt_status(mqtt_publisher.enabled, mqtt_publisher.connected, mqtt_publisher.last_error)
 
     http_part = ""
     if http_server is not None:

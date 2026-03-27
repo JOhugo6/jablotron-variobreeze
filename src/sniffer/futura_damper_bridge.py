@@ -320,12 +320,6 @@ class MqttPublisher:
             return
 
         dampers = [d for d in self._state_getter() if d.get("enabled", True)]
-        device_info = {
-            "identifiers": ["futura_variobreeze"],
-            "name": "Futura VarioBreeze",
-            "manufacturer": "Jablotron",
-            "model": "VarioBreeze",
-        }
         availability = {
             "availability_topic": self.availability_topic,
             "payload_available": "online",
@@ -336,32 +330,40 @@ class MqttPublisher:
             slave_id = damper["slave_id"]
             label = damper.get("label", f"Klapka {slave_id}")
             state_topic = f"{self.topic_prefix}/damper/{slave_id}/state"
+            device_info = {
+                "identifiers": [f"futura_damper_{slave_id}"],
+                "name": label,
+                "manufacturer": "Jablotron",
+                "model": "VarioBreeze",
+                "via_device": "futura_bridge",
+                "suggested_area": damper.get("room"),
+            }
 
             sensors = [
                 {
                     "key": "target_position",
-                    "name": f"{label} poloha",
+                    "name": "Poloha",
                     "unit": "%",
                     "icon": "mdi:valve",
                     "device_class": None,
                 },
                 {
                     "key": "status_code",
-                    "name": f"{label} status",
+                    "name": "Status",
                     "unit": None,
                     "icon": "mdi:information-outline",
                     "device_class": None,
                 },
                 {
                     "key": "last_target_ts",
-                    "name": f"{label} poslední změna polohy",
+                    "name": "Poslední změna polohy",
                     "unit": None,
                     "icon": "mdi:clock-outline",
                     "device_class": "timestamp",
                 },
                 {
                     "key": "last_seen_ts",
-                    "name": f"{label} poslední aktivita",
+                    "name": "Poslední aktivita",
                     "unit": None,
                     "icon": "mdi:eye-outline",
                     "device_class": "timestamp",
@@ -392,6 +394,27 @@ class MqttPublisher:
                     qos=self.qos,
                     retain=True,
                 )
+
+        bridge_device = {
+            "identifiers": ["futura_bridge"],
+            "name": "Futura VarioBreeze Bridge",
+            "manufacturer": "Jablotron",
+            "model": "RS485 Bridge",
+        }
+        bridge_config_topic = f"{self.discovery_prefix}/sensor/futura_bridge_status/config"
+        bridge_config_payload = {
+            "name": "Bridge status",
+            "unique_id": "futura_bridge_status",
+            "state_topic": self.availability_topic,
+            "device": bridge_device,
+            **availability,
+        }
+        self._client.publish(
+            bridge_config_topic,
+            json.dumps(bridge_config_payload, ensure_ascii=False),
+            qos=self.qos,
+            retain=True,
+        )
 
         print(f"MQTT HA Discovery: publikováno {len(dampers)} klapek", file=sys.stderr)
 

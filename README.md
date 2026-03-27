@@ -441,6 +441,52 @@ sudo journalctl -u futura-damper-bridge -f
 
 Logy ukončíte klávesovou zkratkou `Ctrl+C`.
 
+### Aktualizace softwaru na Pi Zero
+
+Když vyjde nová verze skriptů v repozitáři, aktualizace na Pi Zero vypadá takto:
+
+1. Přihlaste se na Pi Zero přes SSH.
+2. Stáhněte novou verzi souborů:
+
+Pokud jste v kroku 7 klonovali repo přes `git`:
+
+```bash
+cd ~/futura/repo
+git pull
+cd ~/futura
+cp repo/src/sniffer/futura_damper_bridge.py .
+cp repo/src/sniffer/rs485_modbus_monitor.py .
+```
+
+Pokud přenášíte soubory přes `WinSCP`, nahraďte v `~/futura` soubory `futura_damper_bridge.py` a `rs485_modbus_monitor.py` novými verzemi.
+
+3. Pokud se změnil `requirements.txt` (nová závislost), aktualizujte Python balíčky:
+
+```bash
+cd ~/futura
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Pokud se `requirements.txt` nezměnil, tento krok přeskočte.
+
+4. Restartujte službu:
+
+```bash
+sudo systemctl restart futura-damper-bridge
+```
+
+5. Ověřte, že bridge běží:
+
+```bash
+sudo systemctl status futura-damper-bridge
+sudo journalctl -u futura-damper-bridge --no-pager -n 20
+```
+
+Konfigurační soubory `pi-zero-config.json` a `damper-map.json` se aktualizací nepřepisují. Pokud nová verze přidá nové konfigurační položky, bridge pro ně použije výchozí hodnoty. Nové položky a jejich význam najdete v changelogu nebo v [docs/pi-zero-konfigurace.md](docs/pi-zero-konfigurace.md).
+
+---
+
 ### Krok 13: Napojení na Home Assistant přes MQTT
 
 Tento krok je volitelný. Pokud chcete, aby se stav klapek zobrazoval v `Home Assistant`, potřebujete MQTT broker a zapnuté MQTT v bridge.
@@ -509,12 +555,19 @@ Bridge při připojení k MQTT automaticky publikuje discovery zprávy pro Home 
 
 Po restartu bridge otevřete v HA `Settings` -> `Devices & Services` -> `MQTT`.
 
-Mělo by se tam objevit zařízení `Futura VarioBreeze` a pod ním senzory pro každou klapku:
+V HA se vytvoří:
 
-- `<label> poloha` - cílová poloha klapky v procentech (`target_position`)
-- `<label> status` - stavový kód klapky (`status_code`)
-- `<label> poslední změna polohy` - kdy Futura naposledy přepočítala polohu (`last_target_ts`)
-- `<label> poslední aktivita` - kdy byla klapka naposledy vidět na sběrnici (`last_seen_ts`)
+- jedno nadřazené zařízení `Futura VarioBreeze Bridge`
+- samostatné zařízení pro každou klapku (např. `Obyvak privod 1`, `Knihovna privod 1`, ...)
+
+Každá klapka je vlastní zařízení, takže ji můžete v HA přiřadit do správné místnosti (`Settings` -> `Devices & Services` -> `MQTT` -> klikněte na zařízení klapky -> `Area`). Bridge při discovery navrhuje místnost z `damper-map.json` automaticky (`suggested_area`), ale přiřazení si můžete změnit.
+
+Pod každým zařízením klapky jsou senzory:
+
+- `Poloha` - cílová poloha klapky v procentech (`target_position`)
+- `Status` - stavový kód klapky (`status_code`)
+- `Poslední změna polohy` - kdy Futura naposledy přepočítala polohu (`last_target_ts`)
+- `Poslední aktivita` - kdy byla klapka naposledy vidět na sběrnici (`last_seen_ts`)
 
 Pokud entity nevidíte:
 

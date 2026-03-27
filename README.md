@@ -441,6 +441,128 @@ sudo journalctl -u futura-damper-bridge -f
 
 Logy ukončíte klávesovou zkratkou `Ctrl+C`.
 
+### Krok 13: Napojení na Home Assistant přes MQTT
+
+Tento krok je volitelný. Pokud chcete, aby se stav klapek zobrazoval v `Home Assistant`, potřebujete MQTT broker a zapnuté MQTT v bridge.
+
+#### Na Home Assistant (Pi 5)
+
+1. V `Home Assistant` otevřete `Settings` -> `Add-ons` -> `Add-on Store`.
+2. Najděte `Mosquitto broker` (oficiální add-on) a klikněte `Install`.
+3. Po instalaci klikněte `Start`.
+4. Vytvořte MQTT uživatele: `Settings` -> `People` -> `Users` -> `Add User`.
+   Zapamatujte si jméno a heslo, budete je potřebovat v dalším kroku.
+5. Přidejte MQTT integraci: `Settings` -> `Devices & Services` -> `Add Integration` -> vyhledejte `MQTT`.
+   Pokud máte Mosquitto add-on na stejném stroji, Home Assistant ho většinou najde automaticky.
+   Pokud ne, vyplňte `host` (`127.0.0.1`), `port` (`1883`) a přihlašovací údaje.
+
+#### Na Pi Zero
+
+Upravte `~/futura/pi-zero-config.json` a zapněte MQTT:
+
+```bash
+nano ~/futura/pi-zero-config.json
+```
+
+V sekci `mqtt` změňte:
+
+```json
+"mqtt": {
+  "enabled": true,
+  "host": "IP_ADRESA_HOME_ASSISTANT",
+  "port": 1883,
+  "username": "mqtt_uzivatel",
+  "password": "mqtt_heslo"
+}
+```
+
+Kde:
+
+- `IP_ADRESA_HOME_ASSISTANT` je IP adresa vašeho Pi 5, na kterém běží Home Assistant (například `192.168.1.10`)
+- `mqtt_uzivatel` a `mqtt_heslo` jsou přihlašovací údaje, které jste vytvořili v Home Assistant
+
+Uložte (`Ctrl+O`, `Enter`) a zavřete (`Ctrl+X`).
+
+Pak restartujte bridge, aby se načetla nová konfigurace:
+
+```bash
+sudo systemctl restart futura-damper-bridge
+```
+
+Ověřte, že bridge běží a nemá chyby:
+
+```bash
+sudo systemctl status futura-damper-bridge
+sudo journalctl -u futura-damper-bridge --no-pager -n 20
+```
+
+V logu byste měli vidět zprávu o úspěšném připojení k MQTT brokeru. Pokud vidíte chybu spojení, zkontrolujte:
+
+- jestli je IP adresa Home Assistantu správná
+- jestli je Mosquitto add-on spuštěný
+- jestli jsou uživatelské jméno a heslo správné
+- jestli Pi Zero vidí na síti Pi 5 (zkuste `ping IP_ADRESA_HOME_ASSISTANT`)
+
+#### Ověření v Home Assistant
+
+V `Home Assistant` otevřete `Settings` -> `Devices & Services` -> `MQTT` -> `Configure`.
+
+Klikněte na `Listen to a topic`, zadejte `futura/#` a klikněte `Start listening`.
+
+Pokud bridge posílá data, uvidíte zprávy s aktuálním stavem klapek.
+
+#### Co bridge posílá do MQTT
+
+Pro každou klapku bridge publikuje zprávu na topik:
+
+```
+futura/damper/<slave_id>/state
+```
+
+Příklad zprávy pro klapku `slave_id 69` (Natálka, přívod, zóna 6):
+
+```json
+{
+  "slave_id": 69,
+  "room": "Natalka",
+  "zone": 6,
+  "type": "privod",
+  "damper_index": 1,
+  "label": "Natalka privod 1",
+  "enabled": true,
+  "notes": null,
+  "target_position": 48,
+  "status_code": 1,
+  "last_target_ts": "2026-03-27T12:24:04+00:00",
+  "last_status_ts": "2026-03-27T11:18:00+00:00",
+  "last_seen_ts": "2026-03-27T12:24:04+00:00"
+}
+```
+
+Význam jednotlivých polí:
+
+| Pole | Typ | Popis |
+|---|---|---|
+| `slave_id` | int | Adresa klapky na RS485 sběrnici. Odvozená z DIP přepínačů na klapce |
+| `room` | string | Název místnosti z `damper-map.json` |
+| `zone` | int | Číslo zóny ve Futuře |
+| `type` | string | `privod` (přívodní klapka) nebo `odtah` (odtahová klapka) |
+| `damper_index` | int | Pořadové číslo klapky v dané zóně (pokud je v místnosti víc klapek) |
+| `label` | string | Lidsky čitelný popis klapky z `damper-map.json` |
+| `enabled` | bool | Jestli je klapka v mapě označená jako aktivní |
+| `notes` | string/null | Volitelná poznámka z `damper-map.json` |
+| `target_position` | int/null | Cílová poloha klapky v procentech (0-100). Odvozená z `FC16 / registr 102`, který Futura zapisuje na klapku, když přepočítá požadované otevření. `null` znamená, že od startu bridge nebyla zachycena žádná změna polohy |
+| `status_code` | int/null | Stavový kód klapky. Odvozený z `FC4 / registr 107`, který Futura periodicky čte z klapky. Pozorované hodnoty jsou `0`, `1`, `2`, `4`. Nejde o prosté otevřeno/zavřeno, ale o vícestavový kód. `null` znamená, že od startu bridge nebyla zachycena žádná odpověď |
+| `last_target_ts` | string/null | Časová značka (UTC, ISO 8601) posledního zachyceného zápisu cílové polohy (`registr 102`). Mění se jen když Futura přepočítá polohu klapky, ne periodicky |
+| `last_status_ts` | string/null | Časová značka posledního zachyceného čtení stavového kódu (`registr 107`), při kterém se hodnota změnila |
+| `last_seen_ts` | string/null | Časová značka posledního libovolného rámce zachyceného pro tuto klapku na sběrnici. Aktualizuje se i když se hodnoty nemění. Slouží jako indikátor, že klapka je stále aktivní |
+
+Důležité:
+
+- `target_position` se neposílá periodicky. Futura zapíše novou cílovou polohu jen když ji přepočítá (například při změně CO2 v zóně). Mezi zápisy může být i několik minut.
+- Po restartu bridge bude `target_position` a `status_code` dočasně `null`, dokud Futura znovu nezapíše polohu nebo bridge nenačte poslední známý stav ze snapshotu.
+- Zprávy jsou `retained`, takže Home Assistant vidí poslední známý stav i po svém restartu.
+
 ---
 
 ## Modbus TCP na PC

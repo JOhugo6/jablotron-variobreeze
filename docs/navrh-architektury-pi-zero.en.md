@@ -147,10 +147,9 @@ Typically:
 
 - `slave_id`
 - room
-- type `supply/exhaust`
-- zone number
-- damper index
 - optionally a note or alias
+
+For regular VarioBreeze dampers, `zone`, `type`, and `damper_index` can be derived from `slave_id`. If they are included explicitly in the map, they are mainly useful as readable redundancy and a validation guard.
 
 Recommended name:
 
@@ -551,20 +550,25 @@ For example:
 
 The damper map file should be a purely installation-specific description.
 
-For each damper:
+At minimum for each damper:
 
 - `slave_id`
 - `room`
-- `zone`
-- `type`
-- `damper_index`
+
+Recommended:
+
 - `label`
 - `enabled`
 
-Optionally:
+Optional:
 
+- `zone` - derivable from `slave_id` for regular dampers; if present explicitly, it should match
+- `type` - derivable from `slave_id` for regular dampers; if present explicitly, it should match
+- `damper_index` - derivable from `slave_id` for regular dampers; if present explicitly, it should match
 - `notes`
 - `dip`
+
+This derivation applies to regular VarioBreeze dampers, not arbitrary additional `RS485` nodes with a different address space.
 
 ## Recommended Configuration Templates
 

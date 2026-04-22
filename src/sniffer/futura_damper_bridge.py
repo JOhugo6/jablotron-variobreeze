@@ -121,6 +121,19 @@ def atomic_write_json(path: Path, payload: Dict[str, Any]) -> None:
     os.replace(tmp_path, path)
 
 
+def derive_damper_identity_from_slave_id(slave_id: int) -> Tuple[int, str, int]:
+    offset = slave_id - 64
+    if offset < 0 or offset > 0b11_1111:
+        raise ValueError(
+            f"Slave_id {slave_id} neodpovida podporovanemu adresnimu rozsahu bezne klapky VarioBreeze (64-127)."
+        )
+
+    zone = (offset & 0b111) + 1
+    damper_index = ((offset >> 3) & 0b11) + 1
+    type_name = "odtah" if offset & 0b100000 else "privod"
+    return zone, type_name, damper_index
+
+
 @dataclass
 class DamperMapEntry:
     slave_id: int
@@ -830,9 +843,37 @@ def load_damper_map(path: Path) -> List[DamperMapEntry]:
             raise ValueError(f"Duplicita slave_id {slave_id} v {path}.")
         seen_slave_ids.add(slave_id)
         room = str(item["room"])
-        zone = int(item["zone"])
-        type_name = str(item["type"])
-        damper_index = int(item["damper_index"])
+        derived_zone, derived_type_name, derived_damper_index = derive_damper_identity_from_slave_id(slave_id)
+
+        zone_raw = item.get("zone")
+        if zone_raw is None:
+            zone = derived_zone
+        else:
+            zone = int(zone_raw)
+            if zone != derived_zone:
+                raise ValueError(
+                    f"Klapka slave_id {slave_id} v {path.name} ma zone {zone}, ale odvozena zone je {derived_zone}."
+                )
+
+        type_raw = item.get("type")
+        if type_raw is None:
+            type_name = derived_type_name
+        else:
+            type_name = str(type_raw)
+            if type_name != derived_type_name:
+                raise ValueError(
+                    f"Klapka slave_id {slave_id} v {path.name} ma type '{type_name}', ale odvozeny type je '{derived_type_name}'."
+                )
+
+        damper_index_raw = item.get("damper_index")
+        if damper_index_raw is None:
+            damper_index = derived_damper_index
+        else:
+            damper_index = int(damper_index_raw)
+            if damper_index != derived_damper_index:
+                raise ValueError(
+                    f"Klapka slave_id {slave_id} v {path.name} ma damper_index {damper_index}, ale odvozeny damper_index je {derived_damper_index}."
+                )
         label = str(item.get("label") or f"{room} {type_name} {damper_index}")
         enabled = bool(item.get("enabled", True))
         notes = item.get("notes")

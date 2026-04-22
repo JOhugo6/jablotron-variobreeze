@@ -143,13 +143,16 @@ Obsahuje runtime nastavení bridge:
 
 Obsahuje mapu klapek pro konkrétní instalaci:
 
-- `slave_id`
+- `slave_id` - povinný primární adresní klíč běžné klapky
 - `room`
-- `zone`
-- `type`
-- `damper_index`
+- `zone` - pro běžné klapky volitelné; když chybí, odvodí se ze `slave_id`, když je uvedené, musí sedět
+- `type` - pro běžné klapky volitelné; když chybí, odvodí se ze `slave_id`, když je uvedené, musí sedět
+- `damper_index` - pro běžné klapky volitelné; když chybí, odvodí se ze `slave_id`, když je uvedené, musí sedět
 - `label`
 - `enabled`
+- `notes`
+
+Odvozování platí jen pro běžné klapky VarioBreeze, ne pro libovolné `RS485` periferie s jiným adresním prostorem.
 
 Pro aktuální známou topologii tohoto domu vycházejte z [../../docs/mapa-klapek.md](../../docs/mapa-klapek.md).
 

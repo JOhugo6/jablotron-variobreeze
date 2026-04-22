@@ -322,7 +322,8 @@ The example file contains a damper map for a specific house. If you have a diffe
 
 - `slave_id` of each damper (derived from DIP switches on the damper)
 - the room where the damper is located
-- whether it is supply (`privod`) or exhaust (`odtah`)
+
+For regular VarioBreeze dampers, `zone`, `type`, and `damper_index` are derived from `slave_id`. If you include them explicitly in `damper-map.json`, the bridge checks that they match the derived value.
 
 A detailed description of all fields in both files is in:
 - [docs/pi-zero-konfigurace.en.md](docs/pi-zero-konfigurace.en.md)

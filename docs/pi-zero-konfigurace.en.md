@@ -781,9 +781,6 @@ Example:
 {
   "slave_id": 66,
   "room": "Pracovna",
-  "zone": 3,
-  "type": "privod",
-  "damper_index": 1,
   "label": "Pracovna privod 1",
   "enabled": true,
   "notes": null
@@ -794,6 +791,19 @@ Example:
 
 - damper number on `RS485 / Modbus RTU`
 - must match the actually mapped dampers
+- for regular VarioBreeze dampers this is the primary addressing key
+- if `zone`, `type`, or `damper_index` are missing, the bridge derives them from `slave_id`
+
+For a regular damper:
+
+```text
+offset = slave_id - 64
+zone = (offset & 0b111) + 1
+damper_index = ((offset >> 3) & 0b11) + 1
+type = "odtah" if (offset & 0b100000) else "privod"
+```
+
+This derivation only applies to regular VarioBreeze dampers, not `ALFA` or other `RS485` nodes with a different address range.
 
 ### `room`
 
@@ -803,6 +813,8 @@ Example:
 ### `zone`
 
 - zone number in the Futura
+- optional for regular dampers
+- if present, it must match the value derived from `slave_id`
 
 ### `type`
 
@@ -810,14 +822,19 @@ Allowed values:
 
 - `"privod"`
 - `"odtah"`
+- optional for regular dampers
+- if present, it must match the value derived from `slave_id`
 
 ### `damper_index`
 
 - damper order within a given room or zone
+- optional for regular dampers
+- if present, it must match the value derived from `slave_id`
 
 ### `label`
 
 - human-readable damper name
+- if missing, the bridge builds it from `room`, the derived `type`, and the derived `damper_index`
 
 ### `enabled`
 

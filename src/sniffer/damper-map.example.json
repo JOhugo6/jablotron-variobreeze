@@ -3,9 +3,6 @@
     {
       "slave_id": 64,
       "room": "Obyvak",
-      "zone": 1,
-      "type": "privod",
-      "damper_index": 1,
       "label": "Obyvak privod 1",
       "enabled": true,
       "notes": "DIP all OFF"
@@ -13,9 +10,6 @@
     {
       "slave_id": 72,
       "room": "Obyvak",
-      "zone": 1,
-      "type": "privod",
-      "damper_index": 2,
       "label": "Obyvak privod 2",
       "enabled": true,
       "notes": "DIP4 ON"
@@ -23,9 +17,6 @@
     {
       "slave_id": 80,
       "room": "Obyvak",
-      "zone": 1,
-      "type": "privod",
-      "damper_index": 3,
       "label": "Obyvak privod 3",
       "enabled": true,
       "notes": "DIP5 ON"
@@ -33,9 +24,6 @@
     {
       "slave_id": 65,
       "room": "Knihovna",
-      "zone": 2,
-      "type": "privod",
-      "damper_index": 1,
       "label": "Knihovna privod 1",
       "enabled": true,
       "notes": null
@@ -43,9 +31,6 @@
     {
       "slave_id": 66,
       "room": "Pracovna",
-      "zone": 3,
-      "type": "privod",
-      "damper_index": 1,
       "label": "Pracovna privod 1",
       "enabled": true,
       "notes": null
@@ -53,9 +38,6 @@
     {
       "slave_id": 67,
       "room": "Terka",
-      "zone": 4,
-      "type": "privod",
-      "damper_index": 1,
       "label": "Terka privod 1",
       "enabled": true,
       "notes": null
@@ -63,9 +45,6 @@
     {
       "slave_id": 68,
       "room": "Marta",
-      "zone": 5,
-      "type": "privod",
-      "damper_index": 1,
       "label": "Marta privod 1",
       "enabled": true,
       "notes": null
@@ -73,9 +52,6 @@
     {
       "slave_id": 69,
       "room": "Natalka",
-      "zone": 6,
-      "type": "privod",
-      "damper_index": 1,
       "label": "Natalka privod 1",
       "enabled": true,
       "notes": null
@@ -83,9 +59,6 @@
     {
       "slave_id": 70,
       "room": "Loznice",
-      "zone": 7,
-      "type": "privod",
-      "damper_index": 1,
       "label": "Loznice privod 1",
       "enabled": true,
       "notes": null
@@ -93,9 +66,6 @@
     {
       "slave_id": 96,
       "room": "Satna",
-      "zone": 1,
-      "type": "odtah",
-      "damper_index": 1,
       "label": "Satna odtah 1",
       "enabled": true,
       "notes": null
@@ -103,9 +73,6 @@
     {
       "slave_id": 97,
       "room": "Predsin",
-      "zone": 2,
-      "type": "odtah",
-      "damper_index": 1,
       "label": "Predsin odtah 1",
       "enabled": true,
       "notes": null
@@ -113,9 +80,6 @@
     {
       "slave_id": 98,
       "room": "Kuchyn",
-      "zone": 3,
-      "type": "odtah",
-      "damper_index": 1,
       "label": "Kuchyn odtah 1",
       "enabled": true,
       "notes": null
@@ -123,9 +87,6 @@
     {
       "slave_id": 106,
       "room": "Kuchyn",
-      "zone": 3,
-      "type": "odtah",
-      "damper_index": 2,
       "label": "Kuchyn odtah 2",
       "enabled": true,
       "notes": "DIP2 + DIP4 + DIP6 ON"
@@ -133,9 +94,6 @@
     {
       "slave_id": 99,
       "room": "Koupelna 1NP",
-      "zone": 4,
-      "type": "odtah",
-      "damper_index": 1,
       "label": "Koupelna 1NP odtah 1",
       "enabled": true,
       "notes": null
@@ -143,9 +101,6 @@
     {
       "slave_id": 100,
       "room": "Koupelna 2NP",
-      "zone": 5,
-      "type": "odtah",
-      "damper_index": 1,
       "label": "Koupelna 2NP odtah 1",
       "enabled": true,
       "notes": null

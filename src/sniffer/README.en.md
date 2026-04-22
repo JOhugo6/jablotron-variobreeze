@@ -143,13 +143,16 @@ Contains runtime settings for the bridge:
 
 Contains the damper map for a specific installation:
 
-- `slave_id`
+- `slave_id` - required primary addressing key for a regular damper
 - `room`
-- `zone`
-- `type`
-- `damper_index`
+- `zone` - optional for regular dampers; if missing, it is derived from `slave_id`, and if present, it must match
+- `type` - optional for regular dampers; if missing, it is derived from `slave_id`, and if present, it must match
+- `damper_index` - optional for regular dampers; if missing, it is derived from `slave_id`, and if present, it must match
 - `label`
 - `enabled`
+- `notes`
+
+This derivation only applies to regular VarioBreeze dampers, not arbitrary `RS485` peripherals with a different address space.
 
 For the current known topology of this house, refer to [../../docs/mapa-klapek.en.md](../../docs/mapa-klapek.en.md).
 

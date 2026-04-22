@@ -147,10 +147,9 @@ Typicky:
 
 - `slave_id`
 - místnost
-- typ `privod/odtah`
-- číslo zóny
-- pořadí klapky
 - případně poznámku nebo alias
+
+U běžných klapek VarioBreeze lze `zone`, `type` a `damper_index` odvodit ze `slave_id`. Když jsou v mapě uvedené explicitně, jsou užitečné hlavně jako čitelná redundance a validační pojistka.
 
 Doporučený název:
 
@@ -551,20 +550,25 @@ Například:
 
 Soubor s mapou klapek má být čistě instalační popis.
 
-Pro každou klapku:
+Minimálně pro každou klapku:
 
 - `slave_id`
 - `room`
-- `zone`
-- `type`
-- `damper_index`
+
+Doporučeně:
+
 - `label`
 - `enabled`
 
 Volitelně:
 
+- `zone` - u běžných klapek odvoditelné ze `slave_id`; při explicitním uvedení má sedět
+- `type` - u běžných klapek odvoditelný ze `slave_id`; při explicitním uvedení má sedět
+- `damper_index` - u běžných klapek odvoditelný ze `slave_id`; při explicitním uvedení má sedět
 - `notes`
 - `dip`
+
+Tohle odvozování platí pro běžné klapky VarioBreeze, ne pro libovolné další `RS485` uzly s jiným adresním prostorem.
 
 ## Doporučený vzor konfigurace
 

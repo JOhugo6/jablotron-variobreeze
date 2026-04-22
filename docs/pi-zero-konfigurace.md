@@ -781,9 +781,6 @@ Příklad:
 {
   "slave_id": 66,
   "room": "Pracovna",
-  "zone": 3,
-  "type": "privod",
-  "damper_index": 1,
   "label": "Pracovna privod 1",
   "enabled": true,
   "notes": null
@@ -794,6 +791,19 @@ Příklad:
 
 - číslo klapky na `RS485 / Modbus RTU`
 - musí odpovídat skutečně zmapovaným klapkám
+- pro běžné klapky VarioBreeze je to primární adresní klíč
+- pokud `zone`, `type` nebo `damper_index` chybí, bridge je odvodí z `slave_id`
+
+Pro běžnou klapku platí:
+
+```text
+offset = slave_id - 64
+zone = (offset & 0b111) + 1
+damper_index = ((offset >> 3) & 0b11) + 1
+type = "odtah" if (offset & 0b100000) else "privod"
+```
+
+Tohle odvozování platí jen pro běžné klapky VarioBreeze, ne pro `ALFA` nebo jiné `RS485` uzly s jiným adresním rozsahem.
 
 ### `room`
 
@@ -803,6 +813,8 @@ Příklad:
 ### `zone`
 
 - číslo zóny ve Futuře
+- pro běžné klapky volitelné
+- pokud je uvedené, musí odpovídat hodnotě odvozené ze `slave_id`
 
 ### `type`
 
@@ -810,14 +822,19 @@ Povolené hodnoty:
 
 - `"privod"`
 - `"odtah"`
+- pro běžné klapky volitelné
+- pokud je uvedené, musí odpovídat hodnotě odvozené ze `slave_id`
 
 ### `damper_index`
 
 - pořadí klapky v rámci dané místnosti nebo zóny
+- pro běžné klapky volitelné
+- pokud je uvedené, musí odpovídat hodnotě odvozené ze `slave_id`
 
 ### `label`
 
 - čitelný název klapky
+- pokud chybí, bridge ho sestaví z `room`, odvozeného `type` a odvozeného `damper_index`
 
 ### `enabled`
 
